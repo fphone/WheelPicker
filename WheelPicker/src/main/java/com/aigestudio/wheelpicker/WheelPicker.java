@@ -20,6 +20,7 @@ import android.view.ViewConfiguration;
 import android.widget.Scroller;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -291,6 +292,8 @@ public class WheelPicker extends View implements IDebug, IWheelPicker, Runnable 
         int idData = a.getResourceId(R.styleable.WheelPicker_wheel_data, 0);
         if (idData != 0) {
             mData = Arrays.asList(getResources().getStringArray(idData));
+        } else {
+            mData = Collections.emptyList();
         }
         mItemTextSize = a.getDimensionPixelSize(R.styleable.WheelPicker_wheel_item_text_size,
                 getResources().getDimensionPixelSize(R.dimen.WheelItemTextSize));
