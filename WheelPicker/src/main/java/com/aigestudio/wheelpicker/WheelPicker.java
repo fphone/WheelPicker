@@ -71,6 +71,7 @@ public class WheelPicker extends View implements IDebug, IWheelPicker, Runnable 
      */
     private OnItemSelectedListener mOnItemSelectedListener;
     private OnWheelChangeListener mOnWheelChangeListener;
+    private TextFormatter mTextFormatter;
 
     private RectF mRectDrawn;
     private RectF mRectIndicatorHead, mRectIndicatorFoot;
@@ -369,15 +370,15 @@ public class WheelPicker extends View implements IDebug, IWheelPicker, Runnable 
     private void computeTextSize() {
         mTextMaxWidth = mTextMaxHeight = 0;
         if (hasSameWidth) {
-            mTextMaxWidth = (int) mPaint.measureText(String.valueOf(mData.get(0)));
+            mTextMaxWidth = (int) mPaint.measureText(format(0));
         } else if (isPosInRang(mTextMaxWidthPosition)) {
             mTextMaxWidth = (int) mPaint.measureText
-                    (String.valueOf(mData.get(mTextMaxWidthPosition)));
+                    (format(mTextMaxWidthPosition));
         } else if (!TextUtils.isEmpty(mMaxWidthText)) {
             mTextMaxWidth = (int) mPaint.measureText(mMaxWidthText);
         } else {
-            for (Object obj : mData) {
-                String text = String.valueOf(obj);
+            for (int i = 0; i < mData.size(); i++) {
+                String text = format(i);
                 int width = (int) mPaint.measureText(text);
                 mTextMaxWidth = Math.max(mTextMaxWidth, width);
             }
@@ -540,10 +541,10 @@ public class WheelPicker extends View implements IDebug, IWheelPicker, Runnable 
             if (isCyclic) {
                 int actualPos = (int) drawnDataPos % mData.size();
                 actualPos = actualPos < 0 ? (actualPos + mData.size()) : actualPos;
-                data = String.valueOf(mData.get(actualPos));
+                data = format(actualPos);
             } else {
                 if (isPosInRang(drawnDataPos)) {
-                    data = String.valueOf(mData.get(drawnDataPos));
+                    data = format(drawnDataPos);
                 }
             }
             mPaint.setColor(mItemTextColor);
@@ -822,6 +823,19 @@ public class WheelPicker extends View implements IDebug, IWheelPicker, Runnable 
     @Override
     public void setOnItemSelectedListener(OnItemSelectedListener listener) {
         mOnItemSelectedListener = listener;
+    }
+
+    @Override
+    public void setTextFormatter(WheelPicker.TextFormatter formatter) {
+        mTextFormatter = formatter;
+    }
+
+    private String format(int position) {
+        if (mTextFormatter != null) {
+            return mTextFormatter.format(this, mData.get(position), position);
+        } else {
+            return String.valueOf(mData.get(position));
+        }
     }
 
     @Override
@@ -1113,6 +1127,11 @@ public class WheelPicker extends View implements IDebug, IWheelPicker, Runnable 
          * @param position 当前选中的数据在数据列表中的位置
          */
         void onItemSelected(WheelPicker picker, Object data, int position);
+    }
+
+    public interface TextFormatter {
+
+        String format(WheelPicker picker, Object data, int position);
     }
 
     /**

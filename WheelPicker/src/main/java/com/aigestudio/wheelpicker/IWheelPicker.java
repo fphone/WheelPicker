@@ -73,6 +73,9 @@ public interface IWheelPicker {
      */
     void setOnItemSelectedListener(WheelPicker.OnItemSelectedListener listener);
 
+
+    void setTextFormatter(WheelPicker.TextFormatter formatter);
+
     /**
      * 获取当前被选中的数据项所显示的数据在数据源中的位置
      * 需要注意的是，当滚轮选择器滚动时并不会改变该方法的返回值，该方法会始终返回

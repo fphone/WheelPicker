@@ -125,6 +125,12 @@ public class WheelDatePicker extends LinearLayout implements WheelPicker.OnItemS
         mPickerDay.setCyclic(isCyclic);
     }
 
+    @Override
+    public void setTextFormatter(WheelPicker.TextFormatter formatter) {
+        throw new UnsupportedOperationException("You can not set TextFormatter for" +
+                "WheelDatePicker");
+    }
+
     @Deprecated
     @Override
     public void setOnItemSelectedListener(WheelPicker.OnItemSelectedListener listener) {
