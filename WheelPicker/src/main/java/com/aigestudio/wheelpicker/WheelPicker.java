@@ -271,11 +271,6 @@ public class WheelPicker extends View implements IDebug, IWheelPicker, Runnable 
     private boolean isCurved;
 
     /**
-     * 是否为点击模式
-     */
-    private boolean isClick;
-
-    /**
      * 是否为强制结束滑动
      */
     private boolean isForceFinishScroll;
@@ -717,6 +712,12 @@ public class WheelPicker extends View implements IDebug, IWheelPicker, Runnable 
             case MotionEvent.ACTION_UP:
                 if (null != getParent())
                     getParent().requestDisallowInterceptTouchEvent(false);
+
+                if (Math.abs(mDownPointY - event.getY()) < mTouchSlop && event.getEventTime() - event.getDownTime() < 500L) {
+                    onClick(event);
+                    break;
+                }
+
                 mTracker.addMovement(event);
 
                 mTracker.computeCurrentVelocity(1000, mMaximumVelocity);
@@ -752,6 +753,14 @@ public class WheelPicker extends View implements IDebug, IWheelPicker, Runnable 
         return true;
     }
 
+    private void onClick(MotionEvent event) {
+        float diff = event.getY() - (getHeight() >> 1);
+        int items = (int) (diff / mItemHeight);
+        setSelectedItemPosition(mCurrentItemPosition + items, true);
+        isTouchTriggered = true;
+        performClick();
+    }
+
     private int computeDistanceToEndPoint(int remainder) {
         if (Math.abs(remainder) > mHalfItemHeight)
             if (mScrollOffsetY < 0)
@@ -780,6 +789,7 @@ public class WheelPicker extends View implements IDebug, IWheelPicker, Runnable 
                 mOnWheelChangeListener.onWheelSelected(position);
                 mOnWheelChangeListener.onWheelScrollStateChanged(SCROLL_STATE_IDLE);
             }
+            isTouchTriggered = false;
         }
         if (mScroller.computeScrollOffset()) {
             if (null != mOnWheelChangeListener)
