@@ -756,7 +756,16 @@ public class WheelPicker extends View implements IDebug, IWheelPicker, Runnable 
     private void onClick(MotionEvent event) {
         float diff = event.getY() - (getHeight() >> 1);
         int items = (int) (diff / mItemHeight);
-        setSelectedItemPosition(mCurrentItemPosition + items, true);
+        int newPosition = mCurrentItemPosition + items;
+        if (isCyclic) {
+            if (newPosition < 0) {
+                newPosition = mData.size() + newPosition;
+            } else if (newPosition >= mData.size()) {
+                newPosition = newPosition % mData.size();
+            }
+        }
+
+        setSelectedItemPosition(newPosition, true);
         isTouchTriggered = true;
         performClick();
     }
@@ -860,11 +869,12 @@ public class WheelPicker extends View implements IDebug, IWheelPicker, Runnable 
 
     public void setSelectedItemPosition(int position, final boolean animated) {
         isTouchTriggered = false;
+        int itemDifference = position - mCurrentItemPosition;
+        if (itemDifference == 0)
+            return;
+
         if (animated && mScroller.isFinished()) { // We go non-animated regardless of "animated" parameter if scroller is in motion
             int length = getData().size();
-            int itemDifference = position - mCurrentItemPosition;
-            if (itemDifference == 0)
-                return;
             if (isCyclic && Math.abs(itemDifference) > (length / 2)) { // Find the shortest path if it's cyclic
                 itemDifference += (itemDifference > 0) ? -length : length;
             }
