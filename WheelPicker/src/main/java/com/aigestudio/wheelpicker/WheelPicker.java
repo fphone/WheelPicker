@@ -908,10 +908,22 @@ public class WheelPicker extends View implements IDebug, IWheelPicker, Runnable 
     public void setData(List data) {
         if (null == data)
             throw new NullPointerException("WheelPicker's data can not be null!");
+
+        Object oldValue = null;
+        if (mData != null) {
+            oldValue = mData.get(mSelectedItemPosition);
+        }
+
         mData = data;
 
-        // 重置位置
-        if (mSelectedItemPosition > data.size() - 1 || mCurrentItemPosition > data.size() - 1) {
+        int newPosition = -1;
+        if (oldValue != null) {
+            newPosition = mData.indexOf(oldValue);
+        }
+
+        if (newPosition > -1) {
+            mSelectedItemPosition = mCurrentItemPosition = newPosition;
+        } else if (mSelectedItemPosition > data.size() - 1 || mCurrentItemPosition > data.size() - 1) {
             mSelectedItemPosition = mCurrentItemPosition = data.size() - 1;
         } else {
             mSelectedItemPosition = mCurrentItemPosition;
