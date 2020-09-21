@@ -910,7 +910,7 @@ public class WheelPicker extends View implements IDebug, IWheelPicker, Runnable 
             throw new NullPointerException("WheelPicker's data can not be null!");
 
         Object oldValue = null;
-        if (mData != null) {
+        if (mData != null && mSelectedItemPosition < mData.size()) {
             oldValue = mData.get(mSelectedItemPosition);
         }
 
