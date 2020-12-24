@@ -781,7 +781,7 @@ public class WheelPicker extends View implements IDebug, IWheelPicker, Runnable 
                 items = len - currentPos - 1;
             }
         }
-        mScroller.startScroll(0, mScroller.getCurrY(), 0, (-items) * mItemHeight);
+        mScroller.startScroll(0, (int) mScrollOffsetY, 0, (-items) * mItemHeight);
         mHandler.post(this);
     }
 
