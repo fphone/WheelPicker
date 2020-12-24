@@ -713,6 +713,10 @@ public class WheelPicker extends View implements IDebug, IWheelPicker, Runnable 
                 if (null != getParent())
                     getParent().requestDisallowInterceptTouchEvent(false);
 
+                // 根据速度判断是该滚动还是滑动
+                // Judges the WheelPicker is scroll or fling base on current velocity
+                isForceFinishScroll = false;
+
                 if (Math.abs(mDownPointY - event.getY()) < mTouchSlop && event.getEventTime() - event.getDownTime() < 500L) {
                     onClick(event);
                     break;
@@ -722,9 +726,6 @@ public class WheelPicker extends View implements IDebug, IWheelPicker, Runnable 
 
                 mTracker.computeCurrentVelocity(1000, mMaximumVelocity);
 
-                // 根据速度判断是该滚动还是滑动
-                // Judges the WheelPicker is scroll or fling base on current velocity
-                isForceFinishScroll = false;
                 float velocity = mTracker.getYVelocity();
 
                 if (Math.abs(velocity) > mMinimumVelocity) {
@@ -753,19 +754,41 @@ public class WheelPicker extends View implements IDebug, IWheelPicker, Runnable 
         return true;
     }
 
+    private int calculatePosition() {
+        int currentPos = (int) Math.round(-mScrollOffsetY / mItemHeight + mSelectedItemPosition);
+        int len =  mData.size();
+        if (isCyclic) {
+            currentPos = currentPos % len;
+            return currentPos < 0 ? currentPos + len: currentPos;
+        } else {
+            return Math.max(0, Math.min(currentPos, len - 1));
+        }
+    }
+
+    private void scrollBy(int items) {
+        int len = mData.size();
+        if (isCyclic) {
+            if (Math.abs(items) > (len / 2)) {
+                // Find the shortest path if it's cyclic
+                items += (items > 0) ? -len : len;
+            }
+        } else {
+            int currentPos = calculatePosition();
+            int newPos = currentPos + items;
+            if (newPos < 0) {
+                items = -currentPos;
+            } else if (newPos > len - 1) {
+                items = len - currentPos - 1;
+            }
+        }
+        mScroller.startScroll(0, mScroller.getCurrY(), 0, (-items) * mItemHeight);
+        mHandler.post(this);
+    }
+
     private void onClick(MotionEvent event) {
         float diff = event.getY() - (getHeight() >> 1);
         int items = (int) (diff / mItemHeight);
-        int newPosition = mCurrentItemPosition + items;
-        if (isCyclic) {
-            if (newPosition < 0) {
-                newPosition = mData.size() + newPosition;
-            } else if (newPosition >= mData.size()) {
-                newPosition = newPosition % mData.size();
-            }
-        }
-
-        setSelectedItemPosition(newPosition, true);
+        scrollBy(items);
         isTouchTriggered = true;
         performClick();
     }
@@ -785,8 +808,7 @@ public class WheelPicker extends View implements IDebug, IWheelPicker, Runnable 
         if (null == mData || mData.size() == 0) return;
         if (mScroller.isFinished() && !isForceFinishScroll) {
             if (mItemHeight == 0) return;
-            int position = (int) (-mScrollOffsetY / mItemHeight + mSelectedItemPosition) % mData.size();
-            position = position < 0 ? position + mData.size() : position;
+            int position = calculatePosition();
             if (mCurrentItemPosition != position) {
                 if (isDebug)
                     Log.i(TAG, position + ":" + mData.get(position) + ":" + mScrollOffsetY);
@@ -874,12 +896,7 @@ public class WheelPicker extends View implements IDebug, IWheelPicker, Runnable 
             return;
 
         if (animated && mScroller.isFinished()) { // We go non-animated regardless of "animated" parameter if scroller is in motion
-            int length = getData().size();
-            if (isCyclic && Math.abs(itemDifference) > (length / 2)) { // Find the shortest path if it's cyclic
-                itemDifference += (itemDifference > 0) ? -length : length;
-            }
-            mScroller.startScroll(0, mScroller.getCurrY(), 0, (-itemDifference) * mItemHeight);
-            mHandler.post(this);
+            scrollBy(itemDifference);
         } else {
             if (!mScroller.isFinished())
                 mScroller.abortAnimation();
